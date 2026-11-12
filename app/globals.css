@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@theme {
+  /* Desktop layout (sidebar, side-by-side panels) from 896px, so laptop-width windows get it. */
+  --breakpoint-lg: 56rem;
+
+  --color-ink: #1e1b2e;
+  --color-ink-2: #3a3650;
+  --color-ink-3: #4a4560;
+  --color-pink: #ffe3ea;
+  --color-sky: #dce6ff;
+  --color-cream: #fff1c9;
+  --color-coral: #ff5a36;
+  --color-sun: #ffc93c;
+  --color-mint: #7bdcb5;
+  --color-blue: #5b8cff;
+  --color-mist: #edeaf2;
+
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-hard-xs: 2px 2px 0 var(--color-ink);
+  --shadow-hard-sm: 3px 3px 0 var(--color-ink);
+  --shadow-hard: 4px 4px 0 var(--color-ink);
+  --shadow-hard-md: 5px 5px 0 var(--color-ink);
+  --shadow-hard-lg: 6px 6px 0 var(--color-ink);
+  --shadow-hard-xl: 7px 7px 0 var(--color-ink);
+}
+
+html {
+  color: var(--color-ink);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-pink);
+}
+
+a {
+  color: inherit;
+}
+
+/* Visible, chunky focus ring that matches the style. */
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--color-blue);
+  outline-offset: 3px;
+}
+
+/* Pressable: buttons squish into their shadow. */
+.press {
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.press:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--color-ink);
+}
+
+dialog::backdrop {
+  background: rgb(30 27 46 / 0.45);
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.pop-in {
+  animation: pop-in 260ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+.wiggle {
+  animation: wiggle 500ms ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pop-in, .wiggle { animation: none; }
+  .press { transition: none; }
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
