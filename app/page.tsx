@@ -38,26 +38,26 @@ export default function Home() {
           <div className="grid items-center gap-10 lg:min-h-[calc(100dvh-150px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-12 xl:gap-20">
             <div className="flex flex-col gap-6 lg:gap-8">
               <div>
-                <h1 className="m-0 font-display text-[40px] font-extrabold leading-none lg:text-[72px] lg:leading-[0.95]">
-                  Your people
+                <h1 className="m-0 font-display text-[42px] font-extrabold leading-[0.98] lg:text-[64px] lg:leading-[0.95] xl:text-[72px]">
+                  Get the{" "}
+                  <span className="relative inline-block whitespace-nowrap">
+                    <span className="relative z-10">perfect gift.</span>
+                    <span aria-hidden="true" className="absolute inset-x-0 bottom-[0.06em] z-0 h-[0.28em] -rotate-1 rounded-full bg-sun" />
+                  </span>
                 </h1>
-                <p className="mb-0 mt-2 text-[15px] text-ink-2 lg:mt-4 lg:max-w-md lg:text-lg">
-                  The little gift-genius in your pocket. Start with someone you love.
+                <p className="mb-0 mt-4 max-w-md text-base leading-relaxed text-ink-2 lg:mt-5 lg:text-lg">
+                  Answer a few fun questions about the people you love, and Giftea turns it into gift ideas made just
+                  for them. Birthdays, anniversaries, just because: no more last-minute guessing.
                 </p>
               </div>
               <Card tilt={-1.5} className="pop-in flex max-w-md flex-col items-start gap-4 bg-sun p-6 shadow-hard-lg lg:p-7">
                 <GiftIcon size={44} />
                 <h2 className="m-0 font-display text-[28px] font-extrabold leading-tight">Who are we spoiling first?</h2>
-                <p className="m-0 text-[15px]">
-                  Add a friend, spill a little tea about them, and get gift ideas that actually feel like them.
-                </p>
                 <Button variant="primary" onClick={add.open} className="h-14 w-full">
                   + Add a friend
                 </Button>
               </Card>
-              <p className="m-0 max-w-md text-sm text-ink-3">
-                No sign-up. Everything stays in this browser, and your friends never get a form.
-              </p>
+              <StepsList />
             </div>
             <HowItWorks />
           </div>
@@ -111,6 +111,31 @@ export default function Home() {
       </div>
       {add.modal}
     </Shell>
+  );
+}
+
+const STEPS = [
+  { title: "Add your people", text: "Plus their birthdays and big days, so nothing sneaks up on you." },
+  { title: "Spill the tea", text: "Quick, fun questions about what they’re into. They never see a thing." },
+  { title: "Get gift ideas", text: "Three ideas that fit them, your budget and the occasion." },
+];
+
+/** The same 1-2-3 story as the desktop preview, for smaller screens. */
+function StepsList() {
+  return (
+    <ol className="m-0 flex list-none flex-col gap-3 p-0 lg:hidden" aria-label="How it works">
+      {STEPS.map((s, i) => (
+        <li key={s.title} className="flex items-start gap-3 rounded-2xl border-2 border-ink bg-white p-3.5">
+          <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-ink font-display text-base font-extrabold text-white">
+            {i + 1}
+          </span>
+          <span>
+            <span className="block font-display text-lg font-extrabold leading-tight">{s.title}</span>
+            <span className="block text-sm text-ink-2">{s.text}</span>
+          </span>
+        </li>
+      ))}
+    </ol>
   );
 }
 

@@ -56,14 +56,18 @@ function MonthDay({
 const PRONOUNS: { value: Pronoun; label: string }[] = [
   { value: "she", label: "She/her" },
   { value: "he", label: "He/him" },
-  { value: "they", label: "They/them" },
 ];
 
 function PronounPicker({ value, onChange }: { value: Pronoun; onChange: (p: Pronoun) => void }) {
   return (
     <div role="group" aria-label="Pronouns" className="flex flex-wrap gap-2">
       {PRONOUNS.map((p) => (
-        <Chip key={p.value} pressed={value === p.value} onClick={() => onChange(p.value)}>
+        <Chip
+          key={p.value}
+          pressed={value === p.value}
+          // Tapping the chosen one again clears it; the app then uses neutral wording.
+          onClick={() => onChange(value === p.value ? "they" : p.value)}
+        >
           {p.label}
         </Chip>
       ))}
@@ -126,7 +130,9 @@ export function FriendForm({
         </Field>
       </div>
       <div className="flex flex-col gap-1.5">
-        <span className="text-sm font-bold">Pronouns</span>
+        <span className="text-sm font-bold">
+          Pronouns <span className="font-normal text-ink-3">· optional</span>
+        </span>
         <PronounPicker value={pronoun} onChange={setPronoun} />
       </div>
       {withBirthday && (
