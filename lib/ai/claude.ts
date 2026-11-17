@@ -1,10 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
-import { IdeasError, IdeasSchema, MESSAGES, SYSTEM, buildPrompt, type GeneratedIdea, type IdeasRequest } from "./prompt";
+import type { z } from "zod";
+import { IdeasError, MESSAGES, type StructuredCall } from "./prompt";
 
 const MODEL = "claude-opus-5-5";
 
-export async function ideasFromClaude(input: IdeasRequest): Promise<GeneratedIdea[]> {
+/** Ask Claude for JSON that matches `schema`. */
+export async function claudeParse<T extends z.ZodType>({ schema, system, prompt }: StructuredCall<T>): Promise<z.infer<T>> {
   const client = new Anthropic(); // reads ANTHROPIC_API_KEY
 
   try {
@@ -14,16 +16,16 @@ export async function ideasFromClaude(input: IdeasRequest): Promise<GeneratedIde
       // If the main model declines, the API retries on a suitable fallback model in the same call.
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
-      // Low effort keeps ideas snappy; raise to "medium" for more considered picks.
-      output_config: { effort: "low", format: betaZodOutputFormat(IdeasSchema) },
-      system: SYSTEM,
-      messages: [{ role: "user", content: buildPrompt(input) }],
+      // Low effort keeps replies snappy; raise to "medium" for more considered picks.
+      output_config: { effort: "low", format: betaZodOutputFormat(schema) },
+      system,
+      messages: [{ role: "user", content: prompt }],
     });
 
     if (response.stop_reason === "refusal" || !response.parsed_output) {
       throw new IdeasError(MESSAGES.noIdeas, 502);
     }
-    return response.parsed_output.ideas;
+    return response.parsed_output as z.infer<T>;
   } catch (err) {
     if (err instanceof IdeasError) throw err;
     if (err instanceof Anthropic.AuthenticationError) throw new IdeasError(MESSAGES.badKey("ANTHROPIC_API_KEY"), 500);

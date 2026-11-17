@@ -33,7 +33,8 @@ function normalizeFriend(f: Partial<Friend>): Friend {
     color: f.color ?? AVATAR_COLORS[0],
     tags: Array.isArray(f.tags) ? f.tags : [],
     answers: f.answers && typeof f.answers === "object" ? f.answers : {},
-    occasions: Array.isArray(f.occasions) ? f.occasions : [],
+    // "Just because" was removed as an occasion; drop it from older saved data.
+    occasions: Array.isArray(f.occasions) ? f.occasions.filter((o) => (o.kind as string) !== "just-because") : [],
     gifts: Array.isArray(f.gifts) ? f.gifts : [],
     shortlist: Array.isArray(f.shortlist) ? f.shortlist : [],
     lastIdeas: f.lastIdeas,

@@ -121,7 +121,7 @@ function Profile({ friend }: { friend: Friend }) {
           </div>
           {friend.occasions.length === 0 ? (
             <p className="mb-0 mt-3 text-[15px] text-ink-2">
-              Birthdays, anniversaries, a new job, or just because. Add one so you’re never caught out.
+              Birthdays, anniversaries, a new job, a housewarming. Add one so you’re never caught out.
             </p>
           ) : (
             <ul className="m-0 mt-3 flex list-none flex-col gap-2 p-0">
@@ -142,7 +142,7 @@ function Profile({ friend }: { friend: Friend }) {
                         <CalendarIcon size={18} />
                         <span className="flex-1 font-bold">{o.label}</span>
                         <span className="text-sm text-ink-3">
-                          {shortDate(o) || (o.kind === "just-because" ? "any day" : "no date")}
+                          {shortDate(o) || "no date yet"}
                           {o.recurring && shortDate(o) ? " · yearly" : ""}
                           {passed ? " · done" : ""}
                         </span>
@@ -384,7 +384,7 @@ function Countdown({ friend, up, onAdd }: { friend: Friend; up: ReturnType<typeo
           {up.date ? ` · ${shortDate(up.occasion)}` : ""}
         </div>
         <div className="font-display text-[22px] font-extrabold lg:text-[28px]">
-          {up.days === null ? fill("Any day is a good day", friend) : countdownText(up.days)}
+          {up.days === null ? "Date to be set" : countdownText(up.days)}
         </div>
       </div>
       <GiftIcon size={36} />

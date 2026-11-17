@@ -31,6 +31,8 @@ export const RequestSchema = z.object({
   quickPicks: z.array(z.string().max(40)).max(10),
   locale: z.object({ locale: z.string().max(35), region: z.string().max(5) }),
   avoid: z.array(z.string().max(200)).max(30),
+  /** A follow-up from the chat, e.g. "cheaper" or "more personal". */
+  tweak: z.string().max(300).optional(),
 });
 
 export type IdeasRequest = z.infer<typeof RequestSchema>;
@@ -46,6 +48,15 @@ export const IdeasSchema = z.object({
 });
 
 export type GeneratedIdea = z.infer<typeof IdeasSchema>["ideas"][number];
+
+/** One structured-output request, shared by every provider. */
+export interface StructuredCall<T extends z.ZodType> {
+  schema: T;
+  /** Short snake_case name for the output format. */
+  name: string;
+  system: string;
+  prompt: string;
+}
 
 /** A failure with a friendly message the app can show as-is. */
 export class IdeasError extends Error {
@@ -76,7 +87,7 @@ Writing style:
 - why: one or two short, warm sentences (under 30 words) saying why it fits this friend, pointing at the specific things you were told. Use the friend's first name or pronouns, and write like a friend talking, not a catalogue.`;
 
 export function buildPrompt(input: IdeasRequest) {
-  const { friend, occasion, budget, skipPastGifts, quickPicks, locale, avoid } = input;
+  const { friend, occasion, budget, skipPastGifts, quickPicks, locale, avoid, tweak } = input;
   const pronoun = { she: "she/her", he: "he/him", they: "they/them" }[friend.pronoun];
   const lines: string[] = [];
 
@@ -117,6 +128,9 @@ export function buildPrompt(input: IdeasRequest) {
   }
   if (avoid.length) {
     lines.push("", "Already suggested this session, so give fresh ideas instead:", ...avoid.map((a) => `- ${a}`));
+  }
+  if (tweak) {
+    lines.push("", `The user saw the ideas above and asked for a change: "${tweak}". Give three new ideas that follow it.`);
   }
 
   return lines.join("\n");

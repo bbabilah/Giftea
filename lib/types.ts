@@ -14,7 +14,6 @@ export type OccasionKind =
   | "new-job"
   | "housewarming"
   | "thank-you"
-  | "just-because"
   | "custom";
 
 export interface Occasion {

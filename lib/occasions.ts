@@ -22,7 +22,6 @@ export const OCCASION_PRESETS: OccasionPreset[] = [
   { kind: "new-job", label: "New job", recurring: false, group: "one-off" },
   { kind: "housewarming", label: "Housewarming", recurring: false, group: "one-off" },
   { kind: "thank-you", label: "Thank-you", recurring: false, group: "one-off" },
-  { kind: "just-because", label: "Just because", recurring: false, group: "other" },
   { kind: "custom", label: "Something else", recurring: false, group: "other" },
 ];
 
@@ -62,7 +61,7 @@ export interface Upcoming {
   days: number | null;
 }
 
-/** The soonest dated occasion; falls back to an undated one ("Just because"). */
+/** The soonest dated occasion; falls back to one that has no date yet. */
 export function nextOccasion(friend: Friend, now = new Date()): Upcoming | null {
   let best: Upcoming | null = null;
   for (const o of friend.occasions) {

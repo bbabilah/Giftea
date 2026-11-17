@@ -8,7 +8,7 @@ import { Button, Chip, Field, inputClass } from "./ui";
 
 /* ---------- small bits ---------- */
 
-function MonthDay({
+export function MonthDay({
   month,
   day,
   onChange,
@@ -174,7 +174,6 @@ export function OccasionForm({ initial, onSubmit }: { initial?: Occasion; onSubm
     setIso("");
   };
 
-  const undated = kind === "just-because";
   const groups: Array<[string, string]> = [
     ["yearly", "Every year"],
     ["one-off", "One-off"],
@@ -188,13 +187,11 @@ export function OccasionForm({ initial, onSubmit }: { initial?: Occasion; onSubm
         e.preventDefault();
         const label = kind === "custom" ? customLabel.trim() : preset.label;
         if (!label) return;
-        const base: Occasion = { id: initial?.id ?? uid(), kind, label, recurring: undated ? false : recurring };
-        if (!undated) {
-          if (recurring && month && day) Object.assign(base, { month, day });
-          if (!recurring && iso) {
-            const [y, m, d] = iso.split("-").map(Number);
-            Object.assign(base, { year: y, month: m, day: d });
-          }
+        const base: Occasion = { id: initial?.id ?? uid(), kind, label, recurring };
+        if (recurring && month && day) Object.assign(base, { month, day });
+        if (!recurring && iso) {
+          const [y, m, d] = iso.split("-").map(Number);
+          Object.assign(base, { year: y, month: m, day: d });
         }
         onSubmit(base);
       }}
@@ -224,21 +221,19 @@ export function OccasionForm({ initial, onSubmit }: { initial?: Occasion; onSubm
         </>
       )}
 
-      {!undated && (
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-bold">
-            When? <span className="font-normal text-ink-3">· optional</span>
-          </span>
-          {recurring ? (
-            <MonthDay idPrefix="occ" month={month} day={day} onChange={(m, d) => (setMonth(m), setDay(d))} />
-          ) : (
-            <input type="date" aria-label="Date" className={inputClass} value={iso} onChange={(e) => setIso(e.target.value)} />
-          )}
-          {(kind === "mothers-day" || kind === "fathers-day") && (
-            <span className="text-sm text-ink-3">It moves around by country and year, so pick the date you celebrate.</span>
-          )}
-        </div>
-      )}
+      <div className="flex flex-col gap-1.5">
+        <span className="text-sm font-bold">
+          When? <span className="font-normal text-ink-3">· optional</span>
+        </span>
+        {recurring ? (
+          <MonthDay idPrefix="occ" month={month} day={day} onChange={(m, d) => (setMonth(m), setDay(d))} />
+        ) : (
+          <input type="date" aria-label="Date" className={inputClass} value={iso} onChange={(e) => setIso(e.target.value)} />
+        )}
+        {(kind === "mothers-day" || kind === "fathers-day") && (
+          <span className="text-sm text-ink-3">It moves around by country and year, so pick the date you celebrate.</span>
+        )}
+      </div>
 
       <Button type="submit" variant="primary" className="mt-1 h-14" disabled={kind === "custom" && !customLabel.trim()}>
         {initial ? "Save occasion" : "Add occasion"}
@@ -296,7 +291,7 @@ export function GiftForm({
       onSubmit={(e) => {
         e.preventDefault();
         if (!title.trim()) return;
-        onSubmit({ id: initial?.id ?? uid(), title: title.trim(), occasion: occasion.trim() || "Just because", year, reaction });
+        onSubmit({ id: initial?.id ?? uid(), title: title.trim(), occasion: occasion.trim() || "Gift", year, reaction });
       }}
     >
       <Field label="What did you give?">

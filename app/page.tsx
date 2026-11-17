@@ -6,15 +6,25 @@ import { Avatar, Button, Card, Confetti } from "@/components/ui";
 import { CheckIcon, ChevronRight, GiftIcon, HeartIcon } from "@/components/icons";
 import { friendSubtitle, nextOccasion, sortBySoonest } from "@/lib/occasions";
 import { useFriends } from "@/lib/store";
+import { useLayout } from "@/lib/layout";
+import type { Friend } from "@/lib/types";
 import { Logo } from "@/components/brand";
+import { ChatHome } from "@/components/chat";
+import { LayoutSwitch } from "@/components/layout-switch";
 
 const TILTS = [-1.5, 1, -0.5, 1.5, -1, 0.5];
 
+/** Chat or Classic, whichever the person picked (chat by default). */
 export default function Home() {
   const friends = useFriends();
-  const add = useAddFriend();
+  const layout = useLayout();
 
-  if (!friends) return <Loading bg="#FFE3EA" />;
+  if (!friends || !layout) return <Loading bg="#FFE3EA" />;
+  return layout === "chat" ? <ChatHome friends={friends} /> : <ClassicHome friends={friends} />;
+}
+
+function ClassicHome({ friends }: { friends: Friend[] }) {
+  const add = useAddFriend();
   const sorted = sortBySoonest(friends);
   const empty = sorted.length === 0;
 
@@ -22,16 +32,21 @@ export default function Home() {
     <Shell bg="#FFE3EA" sidebar={false}>
       <Confetti variant={0} className={empty ? "lg:hidden" : undefined} />
       <div className="relative mx-auto flex max-w-6xl flex-col gap-6 lg:pt-2">
-        <header className="flex min-h-[54px] items-center justify-between">
-          <span>
+        <header className="flex min-h-[54px] items-center justify-between gap-3">
+          <span className="flex-none">
             <Logo variant="wordmark" height={36} className="lg:hidden" />
             <Logo variant="lockup" height={68} className="-ml-1 hidden lg:block" />
           </span>
-          {!empty && (
-            <Button variant="primary" onClick={add.open} className="hidden h-[54px] sm:inline-flex">
-              + Add a friend
-            </Button>
-          )}
+          <div className="flex items-center gap-3">
+            <LayoutSwitch value="classic" />
+            {!empty && (
+              <span className="hidden sm:block">
+                <Button variant="primary" onClick={add.open} className="h-[54px]">
+                  + Add a friend
+                </Button>
+              </span>
+            )}
+          </div>
         </header>
 
         {empty ? (
@@ -47,7 +62,7 @@ export default function Home() {
                 </h1>
                 <p className="mb-0 mt-4 max-w-md text-base leading-relaxed text-ink-2 lg:mt-5 lg:text-lg">
                   Answer a few fun questions about the people you love, and Giftea turns it into gift ideas made just
-                  for them. Birthdays, anniversaries, just because: no more last-minute guessing.
+                  for them. Birthdays, anniversaries and everything in between: no more last-minute guessing.
                 </p>
               </div>
               <Card tilt={-1.5} className="pop-in flex max-w-md flex-col items-start gap-4 bg-sun p-6 shadow-hard-lg lg:p-7">

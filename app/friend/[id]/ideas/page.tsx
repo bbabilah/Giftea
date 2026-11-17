@@ -7,15 +7,14 @@ import { BackIcon, CheckIcon, ChevronDown, GiftIcon, HeartIcon, ShakeIcon } from
 import { Loading, NotFound, Shell } from "@/components/shell";
 import { Button, Chip, Confetti, IconLink, cx } from "@/components/ui";
 import { budgetLabel, budgetPresets, detectLocale, type Budget } from "@/lib/currency";
-import { nextDate, nextOccasion, shortDate } from "@/lib/occasions";
-import { fill, firstName } from "@/lib/pronouns";
-import { questionById } from "@/lib/questions";
+import { OCCASION_PRESETS, nextDate, nextOccasion, shortDate } from "@/lib/occasions";
+import { fetchIdeas } from "@/lib/ideas-client";
+import { firstName } from "@/lib/pronouns";
 import { uid, updateFriend, useFriend } from "@/lib/store";
 import type { Friend, Idea, Occasion } from "@/lib/types";
 
 const BG = "#FFF1C9";
 const QUICK_PICKS = ["Last-minute", "Experiences", "Handmade", "Ships abroad"] as const;
-const JUST_BECAUSE: Occasion = { id: "just-because", kind: "just-because", label: "Just because", recurring: false };
 
 export default function IdeasPage() {
   const { id } = useParams<{ id: string }>();
@@ -57,15 +56,22 @@ function Ideas({ friend }: { friend: Friend }) {
   const locale = useMemo(() => detectLocale(), []);
   const presets = useMemo(() => budgetPresets(locale.currency), [locale.currency]);
 
-  const occasions = useMemo(() => {
-    const list = [...friend.occasions].filter((o) => !(o.year && !o.recurring && !nextDate(o)));
-    if (!list.some((o) => o.kind === "just-because")) list.push(JUST_BECAUSE);
-    return list;
+  // The friend's own occasions (minus one-offs that have passed), then common ones they haven't added,
+  // so you can always get ideas without setting up a date first.
+  const { theirs, others } = useMemo(() => {
+    const theirs = friend.occasions.filter((o) => !(o.year && !o.recurring && !nextDate(o)));
+    const others: Occasion[] = OCCASION_PRESETS.filter(
+      (p) => p.kind !== "custom" && !theirs.some((o) => o.kind === p.kind),
+    ).map((p) => ({ id: `preset-${p.kind}`, kind: p.kind, label: p.label, recurring: p.recurring, ...p.fixed }));
+    return { theirs, others };
   }, [friend.occasions]);
+  const occasions = useMemo(() => [...theirs, ...others], [theirs, others]);
 
-  const [occasionId, setOccasionId] = useState(
-    () => friend.lastIdeas?.occasionId ?? nextOccasion(friend)?.occasion.id ?? occasions[0].id,
-  );
+  const [occasionId, setOccasionId] = useState(() => {
+    const last = friend.lastIdeas?.occasionId;
+    if (last && occasions.some((o) => o.id === last)) return last;
+    return nextOccasion(friend)?.occasion.id ?? theirs[0]?.id ?? "preset-birthday";
+  });
   const occasion = occasions.find((o) => o.id === occasionId) ?? occasions[0];
 
   const [budgetIdx, setBudgetIdx] = useState(1); // a sensible middle tier
@@ -92,33 +98,15 @@ function Ideas({ friend }: { friend: Friend }) {
     setError(null);
     setChosen(null);
     try {
-      const res = await fetch("/api/ideas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          friend: {
-            name: friend.name,
-            pronoun: friend.pronoun,
-            nickname: friend.nickname,
-            relationship: friend.relationship,
-            tags: friend.tags,
-            tea: Object.values(friend.answers).map((a) => ({
-              topic: fill(questionById(a.questionId)?.topic ?? a.topic, friend),
-              answer: a.answer,
-            })),
-            gifts: friend.gifts.map((g) => ({ year: g.year, occasion: g.occasion, title: g.title, reaction: g.reaction })),
-          },
-          occasion: { label: occasion.label, date: shortDate(occasion) || undefined },
-          budget: budget ? { ...budget, currency: locale.currency } : null,
-          skipPastGifts: skipPast,
-          quickPicks: picks,
-          locale: { locale: locale.locale, region: locale.region },
-          avoid: fresh ? [] : seen.slice(-15),
-        }),
+      const got = await fetchIdeas({
+        friend,
+        occasion,
+        budget,
+        locale,
+        skipPastGifts: skipPast,
+        quickPicks: picks,
+        avoid: fresh ? [] : seen,
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !Array.isArray(data.ideas)) throw new Error(data.error || "Something went wrong. Give it another shake?");
-      const got: Idea[] = data.ideas;
       setIdeas(got);
       setSeen((s) => [...s, ...got.map((i) => i.title)]);
       setStale(false);
@@ -177,11 +165,30 @@ function Ideas({ friend }: { friend: Friend }) {
       {/* Filters */}
       <div className="no-scrollbar relative -mx-5 mt-4 flex gap-2 overflow-x-auto px-5 pb-1.5 pt-0.5 lg:mx-0 lg:mt-6 lg:flex-wrap lg:items-center lg:gap-2.5 lg:overflow-visible lg:px-0">
         <PillSelect label="Occasion" value={occasion.id} onChange={(v) => changeFilter(() => setOccasionId(v))}>
-          {occasions.map((o) => (
-            <option key={o.id} value={o.id}>
-              {o.label}
-            </option>
-          ))}
+          {theirs.length > 0 ? (
+            <>
+              <optgroup label={`${name}’s occasions`}>
+                {theirs.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Other occasions">
+                {others.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </optgroup>
+            </>
+          ) : (
+            others.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.label}
+              </option>
+            ))
+          )}
         </PillSelect>
         <PillSelect label="Budget" value={String(budgetIdx)} onChange={(v) => changeFilter(() => setBudgetIdx(Number(v)))}>
           {presets.map((b, i) => (
